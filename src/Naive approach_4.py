@@ -199,25 +199,30 @@ train = train.drop('id', axis=1)
 test = test.drop('id', axis=1)
 
 # the infamous tfidf vectorizer (Do you remember this one?)
-tfv = TfidfVectorizer(min_df=3,  
-                      max_features=None,
-#                       max_features=50,
-                    strip_accents='unicode', 
-                      analyzer='word',
-                      # token_pattern=r'\w{1,}',
-                    # ngram_range=(1, 2),
-                      use_idf=1,
-                      smooth_idf=1,
-                      sublinear_tf=1,
-                      stop_words=None
-                        # stop_words = 'english'
-                      )
+# tfv = TfidfVectorizer(min_df=3,
+#                       max_features=None,
+# #                       max_features=50,
+#                     strip_accents='unicode',
+#                       analyzer='word',
+#                       # token_pattern=r'\w{1,}',
+#                     # ngram_range=(1, 2),
+#                       use_idf=1,
+#                       smooth_idf=1,
+#                       sublinear_tf=1,
+#                       stop_words=None
+#                         # stop_words = 'english'
+#                       )
+vectorizer = CountVectorizer(analyzer='word',
+                            tokenizer = None,
+                            preprocessor=None,
+                            stop_words=None,
+                            max_features=50)
 
 
 print 'fit vectorizer'
-tfv.fit(traindata)
-X = tfv.transform(traindata)
-X_test = tfv.transform(testdata)
+vectorizer.fit(traindata)
+X = vectorizer.transform(traindata)
+X_test = vectorizer.transform(testdata)
 
 scaler = StandardScaler()
 
@@ -233,7 +238,7 @@ layers0 = [('input', InputLayer),
            ('dense0', DenseLayer),
            ('dropout1', DropoutLayer),
            ('dense1', DenseLayer),
-           ('dropout2', DropoutLayer),
+           # ('dropout2', DropoutLayer),
            # ('dense2', DenseLayer),
            ('output', DenseLayer),
            ]
@@ -248,7 +253,7 @@ clf = NeuralNet(layers=layers0,
                  dense0_num_units=num_units,
                  dropout1_p=0.5,
                  dense1_num_units=num_units,
-                 dropout2_p=0.5,
+                 # dropout2_p=0.5,
                  # dense2_num_units=num_units,
                  output_num_units=num_classes,
                 # output_num_units=1,
@@ -269,7 +274,7 @@ clf = NeuralNet(layers=layers0,
                     AdjustVariable('update_momentum', start=0.9, stop=0.999),
                     EarlyStopping(patience=100),
                 ])
-
+clf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
 skf = cross_validation.StratifiedKFold(y, n_folds=5, shuffle=True)
 
 scores = cross_validation.cross_val_score(clf, X.astype(np.float32), y.astype(np.int32), cv=skf, scoring=kappa_scorer)
